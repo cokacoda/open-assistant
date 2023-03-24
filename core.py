@@ -78,7 +78,7 @@ class Communication:
     这个Communication类旨在使用OpenAI的API使用户能够与OpenAI的预训练AI模型进行交互。该类包括发送消息和继续对话的方法。
     """
 
-    def __init__(self, model="gpt-3.5-turbo", default_language="English"):
+    def __init__(self, model="gpt-3.5-turbo", default_language="English", dev=False):
         # Initialize the Communication class with a given AI model and default language.
         # 初始化Communication类，包括默认AI模型、消息列表、历史记录列表、默认语言、消息开始索引等属性
 
@@ -87,6 +87,7 @@ class Communication:
         self.history = []
         self.default_language = default_language
         self.messages_start_index = 0
+        self.dev = dev
 
     def continue_conversation(self, next_message, additional_args={}):
         """
@@ -272,7 +273,8 @@ class Communication:
         # 逐个翻译文件内容的每一部分，并将对话历史附加到翻译历史列表中。
         for piece in st:
             next_message = pretext + piece
-            print("Question：\n", next_message, "\n -------------------------------------------")
+            dev_print(self.dev, "Question：\n", next_message, "\n -------------------------------------------")
+            print()
             responses = self.continue_conversation(next_message)
             translation_history = translation_history + responses
             if write_tmp:
@@ -281,8 +283,8 @@ class Communication:
                         f.write(response['choices'][0]['message']['content'])
 
             for response in responses:
-                print("Answer：\n", response['choices'][0]['message']['content'],
-                      "\n -------------------------------------------")
+                dev_print(self.dev, "Answer：\n", response['choices'][0]['message']['content'],
+                          "\n -------------------------------------------")
 
         return translation_history
 
