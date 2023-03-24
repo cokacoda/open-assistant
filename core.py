@@ -252,7 +252,7 @@ class Communication:
             pretext_piece = "text"
         # Define a pretext for the translation message.
         # 定义翻译消息的前文。
-        pretext = "Translate the following " + original_language + pretext_piece + " to " + target_language + latex + ":\n"
+        pretext = "Translate the following " + original_language + pretext_piece + " to " + target_language + pretext_piece + ":\n"
         # Initialize an empty list to store the translation history.
         # 初始化一个空列表以存储翻译历史。
         translation_history = []
