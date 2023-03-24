@@ -1,6 +1,7 @@
 import openai
 import re
 import time
+import json
 
 
 def split_text(text, separator="\n", max_length=2048):
@@ -113,7 +114,7 @@ class Communication:
 
                 # If the response message exceeds the max token limit, continue the conversation.
                 # 如果响应消息超过了最大标记限制，继续对话。
-                while response.choices[0].finish_reason == "length":
+                while response['choices'][0]['finish_reason'] == "length":
                     next_user_message = continue_message
                     response = self.send_messages(next_user_message=next_user_message, additional_args=additional_args)
                     self.write_result(user_message=next_user_message, response=response)
@@ -207,8 +208,8 @@ class Communication:
         # Writes the result of a conversation to the history and messages lists.
 
         self.history.append(response)
-        role = response.choices[0].message.role
-        content = response.choices[0].message.content
+        role = response['choices'][0]['message']['role']
+        content = response['choices'][0]['message']['content']
         self.messages.append(user_message)
         self.messages.append({"role": role, "content": content})
 
@@ -256,7 +257,7 @@ class Communication:
             responses = self.continue_conversation(next_message)
             translation_history = translation_history + responses
             for response in responses:
-                print("Answer：\n", response.choices[0].message.content, "\n -------------------------------------------")
+                print("Answer：\n", response['choices'][0]['message']['content'], "\n -------------------------------------------")
 
         return translation_history
 
@@ -266,12 +267,15 @@ class Communication:
         # 将翻译后的内容写入输出文件。
         with open(output_file, 'w') as f:
             for response in translation_history:
-                if response.choices[0].message.role == 'assistant':
-                    content = response.choices[0].message.content
+                if response['choices'][0]['message']['role'] == 'assistant':
+                    content = response['choices'][0]['message']['content']
                     f.write(content)
                 f.write("\n")
 
     class MaxInputTokenExceededError(Exception):
+        pass
+
+    class UnKnownOpenAIError(Exception):
         pass
 
     def get_last_response(self):
