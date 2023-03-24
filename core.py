@@ -1,7 +1,12 @@
 import openai
 import re
 import time
-import json
+import datetime
+
+
+def dev_print(dev_bool, *dev_msg):
+    if dev_bool:
+        print(*dev_msg)
 
 
 def split_text(text, separator="\n", max_length=2048):
@@ -169,7 +174,7 @@ class Communication:
                 else:
                     raise e
             except openai.error.APIConnectionError as e:
-                print("Connection error. Retrying in 10 seconds.")
+                print("Connection error.\n", str(e), "\nRetrying in 10 seconds.")
                 time.sleep(10)
 
         return response
@@ -213,7 +218,8 @@ class Communication:
         self.messages.append(user_message)
         self.messages.append({"role": role, "content": content})
 
-    def translate_file(self, filepath, original_language, target_language, latex, split_text_max_length=2500):
+    def translate_file(self, filepath, original_language, target_language, latex, split_text_max_length=2500
+                       , write_tmp=True):
         """
         The translate_file method reads the contents of a file and translates it from one language to another using
         OpenAI's API. If the contents of the file exceed a specified maximum length, the method splits the contents
@@ -222,6 +228,7 @@ class Communication:
         translate_file方法从文件中读取内容，并使用OpenAI的API将其从一种语言翻译成另一种语言。如果文件内容超过了指定的最大长度，
         该方法将把内容分成更小的片段。翻译后的内容以对话历史对象的列表形式返回。
 
+        :param write_tmp:
         :param filepath:
         :param original_language:
         :param target_language:
@@ -240,15 +247,27 @@ class Communication:
         # Determine whether the content is in latex format or plain text format.
         # 确定内容是latex格式还是普通文本格式。
         if latex:
-            latex = "latex text"
+            pretext_piece = "latex text"
         else:
-            latex = "text"
+            pretext_piece = "text"
         # Define a pretext for the translation message.
         # 定义翻译消息的前文。
-        pretext = "Translate the following " + original_language + latex + " to " + target_language + latex + ":\n"
+        pretext = "Translate the following " + original_language + pretext_piece + " to " + target_language + latex + ":\n"
         # Initialize an empty list to store the translation history.
         # 初始化一个空列表以存储翻译历史。
         translation_history = []
+
+        tmp_file_name = ''
+        if write_tmp:
+            if latex:
+                file_type = '.tex'
+            else:
+                file_type = '.txt'
+            now = datetime.datetime.now()
+            tmp_file_name = 'tmp_' + now.strftime("%Y-%m-%d-%H%M%S") + file_type
+            with open(tmp_file_name, 'w') as f:
+                f.write('')
+
         # Translate each piece of the file contents and append the conversation history to the translation history list.
         # 逐个翻译文件内容的每一部分，并将对话历史附加到翻译历史列表中。
         for piece in st:
@@ -256,8 +275,14 @@ class Communication:
             print("Question：\n", next_message, "\n -------------------------------------------")
             responses = self.continue_conversation(next_message)
             translation_history = translation_history + responses
+            if write_tmp:
+                for response in responses:
+                    with open(tmp_file_name, 'a') as f:
+                        f.write(response['choices'][0]['message']['content'])
+
             for response in responses:
-                print("Answer：\n", response['choices'][0]['message']['content'], "\n -------------------------------------------")
+                print("Answer：\n", response['choices'][0]['message']['content'],
+                      "\n -------------------------------------------")
 
         return translation_history
 
