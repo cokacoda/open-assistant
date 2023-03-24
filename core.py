@@ -274,7 +274,6 @@ class Communication:
         for piece in st:
             next_message = pretext + piece
             dev_print(self.dev, "Question：\n", next_message, "\n -------------------------------------------")
-            print()
             responses = self.continue_conversation(next_message)
             translation_history = translation_history + responses
             if write_tmp:
